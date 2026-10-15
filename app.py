@@ -354,6 +354,37 @@ def require_token(allowed_roles: Optional[List[str]] = None):
         return wrapper
     return decorator
 
+
+def validate_json_payload(required_fields: Optional[List[str]] = None):
+    """Decorator ensuring request contains valid JSON and specified required fields."""
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            if not request.is_json:
+                return jsonify({
+                    "success": False,
+                    "error": "Bad Request",
+                    "message": "Content-Type must be 'application/json'"
+                }), 400
+            payload = request.get_json(silent=True)
+            if payload is None:
+                return jsonify({
+                    "success": False,
+                    "error": "Malformed JSON",
+                    "message": "Failed to parse JSON body"
+                }), 400
+            if required_fields:
+                missing = [f for f in required_fields if f not in payload or payload[f] is None]
+                if missing:
+                    return jsonify({
+                        "success": False,
+                        "error": "Missing Required Fields",
+                        "missing_fields": missing
+                    }), 400
+            return fn(*args, **kwargs)
+        return wrapper
+    return decorator
+
 # ==============================================================================
 # 6. FLASK APPLICATION INITIALIZATION & MIDDLEWARE
 # ==============================================================================
