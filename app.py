@@ -392,8 +392,31 @@ def validate_json_payload(required_fields: Optional[List[str]] = None):
 app = Flask(AppConfig.APP_NAME)
 app.config["JSON_SORT_KEYS"] = False
 
+_request_counters: Dict[str, List[float]] = {}
+
+
+def is_rate_limited(client_ip: str, limit: int = 120, window_seconds: int = 60) -> bool:
+    """Sliding window rate limit checker."""
+    now = time.time()
+    timestamps = _request_counters.setdefault(client_ip, [])
+    # Remove timestamps older than window
+    _request_counters[client_ip] = [ts for ts in timestamps if now - ts < window_seconds]
+    if len(_request_counters[client_ip]) >= limit:
+        return True
+    _request_counters[client_ip].append(now)
+    return False
+
+
 @app.before_request
 def start_request_profiler():
+    client_ip = request.remote_addr or "127.0.0.1"
+    if is_rate_limited(client_ip, AppConfig.MAX_REQUESTS_PER_MINUTE):
+        return jsonify({
+            "success": False,
+            "error": "Too Many Requests",
+            "message": "Rate limit exceeded. Please try again later."
+        }), 429
+
     request.start_time = time.time()
     request.request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
 
