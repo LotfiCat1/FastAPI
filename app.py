@@ -1,7 +1,7 @@
 """
 My First App - Core REST API Service
 Author: Lotfi
-Version: 1.0.0
+Version: 1.1.0
 Description: A modular backend API service featuring token authentication,
 in-memory data storage, audit logging, and role-based access control.
 """
@@ -28,7 +28,7 @@ from flask import Flask, request, jsonify, Response
 class AppConfig:
     """Runtime configuration settings for My First App."""
     APP_NAME: str = "My First App"
-    APP_VERSION: str = "1.0.0"
+    APP_VERSION: str = "1.1.0"
     ENVIRONMENT: str = os.getenv("APP_ENV", "development")
     DEBUG_MODE: bool = os.getenv("APP_DEBUG", "True").lower() == "true"
     HOST: str = os.getenv("APP_HOST", "0.0.0.0")
