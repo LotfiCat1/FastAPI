@@ -662,6 +662,9 @@ def delete_user_endpoint(user_id: str):
 def list_items_endpoint():
     category = request.args.get("category")
     tag = request.args.get("tag")
+    search_query = request.args.get("q")
+    min_price = request.args.get("min_price", type=float)
+    max_price = request.args.get("max_price", type=float)
     page = int(request.args.get("page", 1))
     page_size = min(int(request.args.get("page_size", AppConfig.DEFAULT_PAGE_SIZE)), AppConfig.MAX_PAGE_SIZE)
 
@@ -670,6 +673,13 @@ def list_items_endpoint():
         items = [i for i in items if i.category.lower() == category.lower()]
     if tag:
         items = [i for i in items if tag.lower() in [t.lower() for t in i.tags]]
+    if search_query:
+        sq = search_query.lower()
+        items = [i for i in items if sq in i.name.lower() or sq in i.category.lower()]
+    if min_price is not None:
+        items = [i for i in items if i.price >= min_price]
+    if max_price is not None:
+        items = [i for i in items if i.price <= max_price]
 
     items_dicts = [i.to_dict() for i in items]
     paginated_items, meta = paginate_records(items_dicts, page, page_size)
