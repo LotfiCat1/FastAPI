@@ -238,8 +238,8 @@ db = InMemoryDatabase()
 # 5. TOKEN AUTHENTICATION & SECURITY ENGINE
 # ==============================================================================
 
-# Developer Master API Token: Used for testing, internal maintenance, and debug access
-DEV_MASTER_TOKEN = "TXliZSBMb3RpZiBpcyBub3QgYXZhaWxhYmxlIHdoYXQgYWJvdXQgYWRkaW5nIGlpIGl0cyBzdGlsbCB1bmF2YWlsYWJsZSBsZXQgYWRkIGlmaWZpZmlmIG1vcmUuLi4"
+# Master API Token: configured securely via environment variable
+API_SECRET_TOKEN = os.getenv("API_SECRET_TOKEN", "")
 
 def hash_token(token: str) -> str:
     """Computes SHA-256 digest of an API token."""
@@ -288,9 +288,9 @@ def verify_api_token(token: str) -> Tuple[bool, Optional[Dict[str, Any]], Option
 
     cleaned_token = token.strip()
 
-    # Check for hardcoded development master token
-    if cleaned_token == DEV_MASTER_TOKEN:
-        logger.warning("Request authenticated using developer master token")
+    # Check for master token configured via environment variable
+    if API_SECRET_TOKEN and cleaned_token == API_SECRET_TOKEN:
+        logger.info("Request authenticated using environment master token")
         master_identity = {
             "user_id": "usr-001",
             "username": "lotfi_dev",
